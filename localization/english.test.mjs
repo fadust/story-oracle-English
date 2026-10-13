@@ -31,6 +31,16 @@ assert.equal(run('parseConvoExportMd(input).turns[0].role', '**【我】**\n\n�
 assert.equal(run('fixFwdHardStructural(input)', 'Alexandra Montgomery-Smythe carefully examines the inscription without opening the door.'), false);
 assert.equal(run('fixFwdHardStructural(input)', '<UpdateVariable>'), true);
 assert.equal(run('condenseNarrStats(input).sents', 'She checks the map. Rowan waits nearby. They leave the door locked.'), 3);
+assert.equal(run('condenseStyleFlagged(input)', 'Alexandra Montgomery-Smythe carefully examines the weathered inscription without opening the door.'), false);
+assert.equal(run('condenseStyleFlagged(input)', '这是一个为了保持旧格式兼容而特意写得很长并且没有任何引号台词干扰的叙述句子。'), true);
+assert.equal(run('condenseNarrStats(input).sents', '“She checks the map. Rowan waits nearby.” They leave the door locked.'), 1);
+const spoken = '【Background】\nAlexandra examines the old lighthouse. Rowan waits beside the closed archive door.\n“No.”\nThey keep the map and ledger ready.';
+assert.ok(run('condenseGuards(input[0], input[1]).fails', [spoken, spoken.replace('“No.”', '“Yes.”')]).includes('quotes'));
+const palette = 'Personality palette: A person\'s personality is like a color palette. X is the base color, Y is the main color, and Z is the embellishment. A combination of multiple personalities is what makes a living person.';
+assert.ok(run('condenseGuards(input[0], input[1]).fails', [palette, palette.replace('is what makes', 'creates')]).includes('protocol'));
+const faces = '【Multiple Faces】\n〔In a crisis〕\nTrigger conditions: The door is locked.\nEnergy status: Brief focus, followed by fatigue.\nCorpus: “Wait here.”\nPhysical behavior patterns: She checks the map.\nFunction: Keep the crew together.';
+assert.ok(!run('condenseGuards(input, input).fails', faces).includes('face5'));
+assert.ok(run('condenseGuards(input[0], input[1]).fails', [faces, faces.replace('Energy status:', 'Unknown field:')]).includes('face5'));
 const pulse = run('parseSeqPulseLine(input)', '<so_seq>拍=2 码=AB12 状态=已达成 证据=「Rowan unlocked the door.」</so_seq>');
 assert.equal(pulse.status, '已达成');
 assert.equal(pulse.quote, 'Rowan unlocked the door.');

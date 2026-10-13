@@ -6168,12 +6168,13 @@ function draftCardLabel(draft) {
     return 'NPC Draft entry:' + (draft.name || draft.comment || 'Unnamed');
 }
 
-// ✂️ 精简·风格量测（纯函数，可单测）：叙述句长分布——「」台词剔除后，以 。！？ 断句（≥4 字才算句），
-// 去空白计字。median>28 或 >50字占比>10% = 风格门点火（spec §4.1；DS/GM 原稿实测本就 terse，
-// fortissimo 是 Opus 特有——这道门让 terse 稿根本不进精简调用）。
+// English prose uses word counts; legacy Chinese drafts keep their original character thresholds.
 function condenseNarrStats(content) {
-    const n = String(content || '').replace(/「[^」]*」/g, '');
-    const lens = (n.match(/[^.!?。！？\n]{4,}?[.!?。！？]/g) || []).map((s) => s.replace(/\s/g, '').length);
+    const n = String(content || '').replace(/「[^」]*」|“[^”]*”|"[^"\n]*"/g, '');
+    const legacy = (n.match(/\p{Script=Han}/gu) || []).length > (n.match(/\p{Script=Latin}/gu) || []).length;
+    const words = new Intl.Segmenter('en', { granularity: 'word' });
+    const lens = (n.match(/[^.!?。！？\n]{4,}?[.!?。！？]/g) || []).map((s) =>
+        legacy ? s.replace(/\s/g, '').length : [...words.segment(s)].filter(part => part.isWordLike).length);
     const sorted = [...lens].sort((a, b) => a - b);
     return {
         median: sorted.length ? sorted[Math.floor(sorted.length / 2)] : 0,
@@ -6213,7 +6214,8 @@ function condenseGuards(rawContent, outContent) {
     const mIn = condenseNarrStats(raw).median, mOut = condenseNarrStats(out).median;
     const styleGain = mIn > 0 ? (mIn - mOut) / mIn : 0;
     if (ratio > 0.95 && styleGain < 0.15) fails.push('noop');                               // G4 复合 no-op（风格大改则不算白跑）
-    const quotes = (t) => (t.match(/「[^」]*」/g) || []).filter((q) => q.length - 2 >= 6 || /[。！？…]/.test(q));
+    const quotes = (t) => (t.match(/「[^」]*」|“[^”]*”|"[^"\n]*"/g) || []).filter((q) =>
+        !q.startsWith('「') || q.length - 2 >= 6 || /[。！？…]/.test(q));
     const qIn = quotes(raw), qOut = quotes(out), qInSet = new Set(qIn);
     const survived = qIn.filter((q) => qOut.includes(q)).length;
     const added = qOut.filter((q) => !qInSet.has(q)).length;
@@ -6222,7 +6224,8 @@ function condenseGuards(rawContent, outContent) {
     const secIn = secsOf(raw), secOut = secsOf(out);
     if (!Object.keys(secIn).every((k) => !secIn[k].includes('{{user}}') || (secOut[k] || '').includes('{{user}}'))) fails.push('user');   // G6 逐节 {{user}} 在场
     // ---- G7 相对结构（编辑只保全、不修复：输入有的，输出不得少）----
-    const decl = (t) => [/性格调色盘：人的性格就像调色盘[\s\S]{0,80}活生生的人/.test(t), /人的性格不是调色盘上一格一格分开的颜色/.test(t)];
+    const decl = (t) => [/(?:性格调色盘：人的性格就像调色盘[\s\S]{0,80}活生生的人|(?:Personality|Character) palette:[^\n]*living person)/i.test(t),
+        /(?:人的性格不是调色盘上一格一格分开的颜色|(?:Human character|A person's personality|Personality) is not[^\n]*palette)/i.test(t)];
     const dIn = decl(raw), dOut = decl(out);
     if ((dIn[0] && !dOut[0]) || (dIn[1] && !dOut[1])) fails.push('decl');
     const counts = (t) => [
@@ -6233,10 +6236,11 @@ function condenseGuards(rawContent, outContent) {
     ];
     const cIn = counts(raw), cOut = counts(out);
     if (cIn.some((n, i) => cOut[i] < n)) fails.push('counts');
-    const FIVE = ['Trigger condition', 'energy state', 'corpus', 'physical behavior patterns', 'Function'];
+    const FIVE = [/(?:Trigger conditions?|触发条件)[:：]/i, /(?:Energy (?:status|state)|能量状态)[:：]/i,
+        /(?:Corpus|语料)[:：]/i, /(?:Physical behavior patterns|身体行为模式)[:：]/i, /(?:Function|功能)[:：]/i];
     const faceBlocks = (t) => ((t.split(/^【\s*(?:多副面孔|Multiple Faces)\s*】/m)[1] || '').split(/^【/m)[0]).split(/^(?=〔[^〕\n]+〕)/m).filter((b) => /^〔/.test(b));
     const fIn = faceBlocks(raw), fOut = faceBlocks(out);
-    if (fIn.length && !(fOut.length === fIn.length && fOut.every((b) => FIVE.every((k) => b.includes(k + '：') || b.includes(k + ':'))))) fails.push('face5');
+    if (fIn.length && !(fOut.length === fIn.length && fOut.every((b) => FIVE.every((field) => field.test(b))))) fails.push('face5');
     // 功能件实体地板（事故门）：画面 in≥2句→out≥2句；衍生 in≥1→out≥1。标签行同行内容计入本块。
     const unitSentences = (t, labelRe) => {
         const units = []; let cur = null;
@@ -6262,8 +6266,8 @@ function condenseGuards(rawContent, outContent) {
     if (ysIn.some((n, i) => n >= 1 && (ysOut[i] ?? 0) < 1)) fails.push('unit-derivative');
     // 协议句全文逐字（含尾巴）：输入里能抽出的完整句，输出必须原样包含。
     const proto = (t) => [
-        (t.match(/性格调色盘：人的性格就像调色盘[^\n]*活生生的人。/) || [null])[0],
-        (t.match(/人的性格不是调色盘上一格一格分开的颜色。[^\n]*(?:\n[^\n【画]*)?(?:颜色在跑。|画面[^\n]*。)/) || [null])[0],
+        (t.match(/性格调色盘：人的性格就像调色盘[^\n]*活生生的人。|^(?:Personality|Character) palette:[^\n]*/im) || [null])[0],
+        (t.match(/人的性格不是调色盘上一格一格分开的颜色。[^\n]*(?:\n[^\n【画]*)?(?:颜色在跑。|画面[^\n]*。)|(?:Human character|A person's personality|Personality) is not[^\n]*palette[^\n]*/i) || [null])[0],
     ];
     if (proto(raw).some((s2) => s2 && !out.includes(s2))) fails.push('protocol');
     return { pass: fails.length === 0, fails, ratio: +ratio.toFixed(2) };
