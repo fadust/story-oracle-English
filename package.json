@@ -1,0 +1,7 @@
+{
+  "name": "story-oracle-english",
+  "private": true,
+  "type": "module",
+  "scripts": { "test": "node localization/english.test.mjs" },
+  "devDependencies": { "typescript": "^5.7.0" }
+}

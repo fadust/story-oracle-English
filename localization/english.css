@@ -1,0 +1,15 @@
+/* Long labels wrap; icon buttons keep their existing dimensions. */
+#so-header { flex-wrap: wrap; }
+#so-title { flex: 1 1 100%; max-width: 100%; }
+#so-header-btns { margin-left: auto; }
+#so-settings label, .so-label, .so-guide-body, .so-lb-ent-title { overflow-wrap: anywhere; }
+#so-settings .so-check { flex-wrap: wrap; }
+#so-settings .so-check > input:not([type="checkbox"]),
+#so-settings .so-check > select { min-width: 0; max-width: 100%; }
+#so-settings .so-grid2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.so-btn:not(.so-icon-btn) { white-space: normal; line-height: 1.35; }
+@media (max-width: 640px) {
+  #so-settings .so-grid2 { grid-template-columns: minmax(0, 1fr); }
+  .so-conn-preset-row { flex-wrap: wrap; }
+  .so-conn-preset-row > select, .so-conn-preset-row > input { flex-basis: 100%; }
+}

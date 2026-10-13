@@ -1,12 +1,12 @@
 {
-    "display_name": "故事神谕 (Story Oracle)",
-    "loading_order": 100,
-    "requires": [],
-    "optional": [],
-    "js": "index.js",
-    "css": "style.css",
-    "author": "built for Prince",
-    "version": "1.89.0",
-    "homePage": "",
-    "auto_update": false
+  "display_name": "Story Oracle",
+  "loading_order": 100,
+  "requires": [],
+  "optional": [],
+  "js": "index.js",
+  "css": "style.css",
+  "author": "built for Prince",
+  "version": "1.89.0",
+  "homePage": "https://github.com/fadust/story-oracle-English",
+  "auto_update": false
 }

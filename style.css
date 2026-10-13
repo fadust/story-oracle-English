@@ -1,3 +1,4 @@
+@import url('./localization/english.css');
 /* Story Oracle — refined styling that inherits SillyTavern's theme.
  * Accent is derived from the active theme (quote color), so it blends with
  * whatever skin is in use rather than imposing a fixed palette. */

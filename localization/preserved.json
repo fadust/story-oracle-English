@@ -1,0 +1,58 @@
+[
+  {
+    "file": "story-oracle/index.js",
+    "start": 327253,
+    "end": 327254,
+    "type": "string",
+    "text": "过",
+    "reason": "Protocol token"
+  },
+  {
+    "file": "story-oracle/index.js",
+    "start": 327277,
+    "end": 327278,
+    "type": "string",
+    "text": "过",
+    "reason": "Protocol token"
+  },
+  {
+    "file": "story-oracle/index.js",
+    "start": 327338,
+    "end": 327339,
+    "type": "string",
+    "text": "缩",
+    "reason": "Protocol token"
+  },
+  {
+    "file": "story-oracle/index.js",
+    "start": 327447,
+    "end": 327448,
+    "type": "string",
+    "text": "缩",
+    "reason": "Protocol token"
+  },
+  {
+    "file": "story-oracle/index.js",
+    "start": 327558,
+    "end": 327559,
+    "type": "string",
+    "text": "删",
+    "reason": "Protocol token"
+  },
+  {
+    "file": "story-oracle/index.js",
+    "start": 329388,
+    "end": 329389,
+    "type": "string",
+    "text": "过",
+    "reason": "Protocol token"
+  },
+  {
+    "file": "story-oracle/index.js",
+    "start": 330009,
+    "end": 330010,
+    "type": "string",
+    "text": "缩",
+    "reason": "Protocol token"
+  }
+]
